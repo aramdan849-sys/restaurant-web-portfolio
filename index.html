@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <meta name="theme-color" content="#060610"/>
+  <title>Portfolio | سعد وائل</title>
+
+  <!-- ===== LIBRARIES ===== -->
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Cairo + Space Grotesk -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <!-- AOS – Animate On Scroll -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"/>
+  <!-- Swiper -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+
+  <!-- GSAP + ScrollTrigger + TextPlugin -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Vanilla Tilt -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+  <!-- Typed.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/typed.js/2.0.16/typed.umd.js"></script>
+  <!-- Swiper JS -->
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <!-- AOS JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <!-- CountUp.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/countup.js/2.8.0/countUp.umd.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { cairo:['Cairo','sans-serif'], grotesk:['Space Grotesk','sans-serif'] }
+        }
+      }
+    }
+  </script>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBHiL8bid6epizf7_nv4Jdlg5NrNmIhzE4",
+      authDomain: "wep-profilo.firebaseapp.com",
+      projectId: "wep-profilo",
+      storageBucket: "wep-profilo.firebasestorage.app",
+      messagingSenderId: "1090288140091",
+      appId: "1:1090288140091:web:0c9a33c6ba33220cff011e",
+      databaseURL: "https://wep-profilo-default-rtdb.firebaseio.com",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getDatabase(app);
+    const reviewsRef = ref(db, 'reviews');
+
+    onValue(reviewsRef, (snapshot) => {
+      const container = document.getElementById('new-reviews-container');
+      container.innerHTML = '';
+      const data = snapshot.val();
+      if (!data) return;
+      const reviews = Object.values(data).reverse();
+      reviews.forEach(r => window.renderReview(r, false));
+    });
+
+    document.getElementById('review-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name  = document.getElementById('rev-name').value.trim();
+      const job   = document.getElementById('rev-job').value.trim();
+      const text  = document.getElementById('rev-text').value.trim();
+      const stars = window._selectedStars || 0;
+      if (!name || !text) return;
+      if (!stars) { alert('من فضلك اختر عدد النجوم!'); return; }
+      const btn = this.querySelector('button[type="submit"]');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري النشر...';
+      btn.disabled = true;
+      push(reviewsRef, { name, job, text, stars, time: Date.now() })
+        .then(() => {
+          this.reset();
+          window._selectedStars = 0;
+          document.querySelectorAll('.star-btn').forEach(s => { s.textContent = '☆'; s.style.color = '#334155'; });
+          btn.innerHTML = '<i class="fas fa-check"></i> تم نشر تعليقك!';
+          btn.style.background = 'linear-gradient(135deg,#10b981,#059669)';
+          btn.style.boxShadow  = '0 0 28px rgba(16,185,129,.5)';
+          btn.disabled = false;
+          setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> نشر التعليق';
+            btn.style.background = '';
+            btn.style.boxShadow  = '';
+          }, 2500);
+        })
+        .catch(() => {
+          btn.innerHTML = '<i class="fas fa-paper-plane"></i> نشر التعليق';
+          btn.disabled = false;
+          alert('حدث خطأ، حاول مرة أخرى!');
+        });
+    });
+  </script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ===== LOADER ===== -->
+<div id="loader">
+  <div class="gradient-text" style="font-size:1.4rem;font-weight:900;font-family:'Space Grotesk',sans-serif;letter-spacing:.15em">
+    PORTFOLIO
+  </div>
+  <div class="loader-bar"><div class="loader-fill"></div></div>
+  <div class="loader-text">LOADING...</div>
+</div>
+
+<!-- ===== PAGE TRANSITION ===== -->
+<div id="page-trans"></div>
+
+<!-- ===== BACKGROUND ===== -->
+<div class="bg-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="orb orb-4"></div>
+</div>
+<canvas id="three-canvas"></canvas>
+
+<!-- ===== NAVBAR ===== -->
+<nav id="navbar">
+  <div class="max-w-6xl mx-auto px-6 flex items-center justify-between">
+    <a href="#hero" class="font-black text-xl"
+       style="background:linear-gradient(135deg,#a855f7,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'Space Grotesk',sans-serif;letter-spacing:.05em">
+      ✦ Portfolio
+    </a>
+    <div class="hidden md:flex items-center gap-8">
+      <a href="#about"    class="nav-link">عني</a>
+      <a href="#skills"   class="nav-link">مهاراتي</a>
+      <a href="#projects" class="nav-link">أعمالي</a>
+      <a href="#reviews"  class="nav-link">تعليقات</a>
+      <a href="#contact"  class="nav-link">تواصل</a>
+      <a href="https://wa.me/2011183759" target="_blank" class="btn btn-wa" style="padding:10px 22px;font-size:.9rem;">
+        <i class="fab fa-whatsapp"></i> واتساب
+      </a>
+    </div>
+    <button id="menu-btn" class="md:hidden text-white text-2xl" style="background:none;border:none;cursor:pointer">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+  <div id="mobile-menu" class="glass md:hidden mx-4 mt-3 rounded-2xl">
+    <a href="#about"    class="nav-link text-center text-lg">عني</a>
+    <a href="#skills"   class="nav-link text-center text-lg">مهاراتي</a>
+    <a href="#projects" class="nav-link text-center text-lg">أعمالي</a>
+    <a href="#reviews"  class="nav-link text-center text-lg">تعليقات</a>
+    <a href="#contact"  class="nav-link text-center text-lg">تواصل</a>
+    <a href="https://wa.me/2011183759" target="_blank" class="btn btn-wa justify-center">
+      <i class="fab fa-whatsapp"></i> واتساب
+    </a>
+  </div>
+</nav>
+
+<!-- ============================= HERO ============================= -->
+<section id="hero" class="hero-section">
+  <div class="max-w-4xl mx-auto">
+    <div class="flex justify-center mb-10">
+      <div class="avatar-wrap floating">
+        <div class="avatar-inner" style="padding:0;overflow:hidden;">
+          <img src="7acb1ea9-b65b-402e-85f2-4950d00dbc48.jpg" alt="سعد وائل" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>
+        </div>
+      </div>
+    </div>
+    <div data-aos="fade-up" data-aos-delay="100">
+      <span class="badge">✦ أهلاً وسهلاً</span>
+    </div>
+    <h1 data-aos="fade-up" data-aos-delay="200"
+        style="font-size:clamp(2.4rem,6vw,4.2rem);font-weight:900;line-height:1.1;margin-bottom:16px;">
+      <span class="gradient-text" id="typed-hero"></span>
+    </h1>
+    <p data-aos="fade-up" data-aos-delay="300"
+       class="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-12">
+      أطور تطبيقات عالية الجودة — من الفكرة إلى التنفيذ.
+      متخصص في <span style="color:#a855f7;font-weight:700">Mobile Apps</span>،
+      <span style="color:#06b6d4;font-weight:700">Web Apps</span> و
+      <span style="color:#a855f7;font-weight:700">Software Engineering</span>
+    </p>
+    <div data-aos="fade-up" data-aos-delay="400" class="flex flex-wrap justify-center gap-4 mb-16">
+      <a href="#projects" class="btn btn-primary"><i class="fas fa-eye"></i> شوف أعمالي</a>
+      <a href="#contact"  class="btn btn-outline"><i class="fas fa-paper-plane"></i> تواصل معي</a>
+    </div>
+    <div data-aos="fade-up" data-aos-delay="500">
+      <div class="scroll-ind"><div class="scroll-dot"></div></div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line my-4" data-aos="fade-in"></div>
+
+<!-- ============================= ABOUT ============================= -->
+<section id="about" class="py-28 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16">
+      <span class="badge" data-aos="fade-up">🙋‍♂️ عني</span>
+      <h2 class="section-title gradient-text" data-aos="fade-up" data-aos-delay="100">من أنا؟</h2>
+      <p class="text-slate-400 text-lg max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="200">
+        مطور تطبيقات شغوف بتقديم حلول برمجية متكاملة. أحب التحدي وبناء تطبيقات تحل مشاكل حقيقية.
+      </p>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+      <div class="stat-card glass" data-aos="zoom-in" data-aos-delay="0">
+        <div class="stat-num" id="count-projects">0</div>
+        <div class="text-slate-400 font-semibold mt-1 text-sm">مشروع منجز+</div>
+      </div>
+      <div class="stat-card glass" data-aos="zoom-in" data-aos-delay="100">
+        <div class="stat-num" id="count-years">0</div>
+        <div class="text-slate-400 font-semibold mt-1 text-sm">سنوات خبرة+</div>
+      </div>
+      <div class="stat-card glass" data-aos="zoom-in" data-aos-delay="200">
+        <div class="stat-num" id="count-clients">0</div>
+        <div class="text-slate-400 font-semibold mt-1 text-sm">عميل راضي+</div>
+      </div>
+      <div class="stat-card glass" data-aos="zoom-in" data-aos-delay="300">
+        <div class="stat-num" id="count-commit">0</div>
+        <div class="text-slate-400 font-semibold mt-1 text-sm">% التزام</div>
+      </div>
+    </div>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="glass-card p-8" data-aos="fade-right" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.15">
+        <div style="font-size:2.8rem;margin-bottom:16px">🎨</div>
+        <h3 style="font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:10px">تصميم إبداعي</h3>
+        <p class="text-slate-400 leading-relaxed text-sm">أهتم بكل تفصيلة في الواجهة — من الألوان والخطوط لحركة الأنيميشن.</p>
+      </div>
+      <div class="glass-card p-8" data-aos="fade-up" data-aos-delay="100" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.15">
+        <div style="font-size:2.8rem;margin-bottom:16px">⚡</div>
+        <h3 style="font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:10px">أداء عالي</h3>
+        <p class="text-slate-400 leading-relaxed text-sm">أكتب كود محسّن يضمن سرعة التحميل وتجربة مستخدم سلسة على كل الأجهزة.</p>
+      </div>
+      <div class="glass-card p-8" data-aos="fade-left" data-aos-delay="200" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.15">
+        <div style="font-size:2.8rem;margin-bottom:16px">📱</div>
+        <h3 style="font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:10px">Responsive كامل</h3>
+        <p class="text-slate-400 leading-relaxed text-sm">كل ما أبنيه يشتغل بشكل مثالي على الموبايل والتابلت والكمبيوتر.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line my-4" data-aos="fade-in"></div>
+
+<!-- ============================= SKILLS ============================= -->
+<section id="skills" class="py-28 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16">
+      <span class="badge" data-aos="fade-up">🛠️ التقنيات</span>
+      <h2 class="section-title gradient-text" data-aos="fade-up" data-aos-delay="100">مهاراتي</h2>
+      <p class="text-slate-400 text-lg max-w-xl mx-auto" data-aos="fade-up" data-aos-delay="200">الأدوات والتقنيات اللي بستخدمها يوميًا لبناء تجارب مميزة</p>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mb-12">
+      <div class="skill-card glass" data-aos="flip-left" data-aos-delay="0">
+        <div class="skill-icon" style="background:rgba(228,77,38,.14);color:#e44d26"><i class="fab fa-html5"></i></div>
+        <h4 style="font-weight:800;color:#fff;margin-bottom:4px">HTML5</h4>
+        <p class="text-slate-400" style="font-size:.8rem;margin-bottom:8px">بناء هيكل الصفحات</p>
+        <div class="progress-bar"><div class="progress-fill" data-width="95"></div></div>
+        <span style="font-size:.75rem;color:#a855f7;font-weight:700;margin-top:4px;display:block">95%</span>
+      </div>
+      <div class="skill-card glass" data-aos="flip-left" data-aos-delay="60">
+        <div class="skill-icon" style="background:rgba(21,114,182,.14);color:#1572b6"><i class="fab fa-css3-alt"></i></div>
+        <h4 style="font-weight:800;color:#fff;margin-bottom:4px">CSS3</h4>
+        <p class="text-slate-400" style="font-size:.8rem;margin-bottom:8px">تنسيق واجهات</p>
+        <div class="progress-bar"><div class="progress-fill" data-width="92"></div></div>
+        <span style="font-size:.75rem;color:#a855f7;font-weight:700;margin-top:4px;display:block">92%</span>
+      </div>
+      <div class="skill-card glass" data-aos="flip-left" data-aos-delay="120">
+        <div class="skill-icon" style="background:rgba(247,223,30,.14);color:#f7df1e"><i class="fab fa-js-square"></i></div>
+        <h4 style="font-weight:800;color:#fff;margin-bottom:4px">JavaScript</h4>
+        <p class="text-slate-400" style="font-size:.8rem;margin-bottom:8px">برمجة تفاعلية</p>
+        <div class="progress-bar"><div class="progress-fill" data-width="88"></div></div>
+        <span style="font-size:.75rem;color:#a855f7;font-weight:700;margin-top:4px;display:block">88%</span>
+      </div>
+      <div class="skill-card glass" data-aos="flip-left" data-aos-delay="180">
+        <div class="skill-icon" style="background:rgba(97,218,251,.14);color:#61dafb"><i class="fab fa-react"></i></div>
+        <h4 style="font-weight:800;color:#fff;margin-bottom:4px">React.js</h4>
+        <p class="text-slate-400" style="font-size:.8rem;margin-bottom:8px">مكتبة واجهات</p>
+        <div class="progress-bar"><div class="progress-fill" data-width="85"></div></div>
+        <span style="font-size:.75rem;color:#a855f7;font-weight:700;margin-top:4px;display:block">85%</span>
+      </div>
+      <div class="skill-card glass" data-aos="flip-right" data-aos-delay="0">
+        <div class="skill-icon" style="background:rgba(255,255,255,.07);color:#e2e8f0"><i class="fas fa-layer-group"></i></div>
+        <h4 style="font-weight:800;color:#fff;margin-bottom:4px">Next.js</h4>
+        <p class="text-slate-400" style="font-size:.8rem;margin-bottom:8px">إطار React كامل</p>
+        <div class="progress-bar"><div class="progress-fill" data-width="80"></div></div>
+        <span style="font-size:.75rem;color:#a855f7;font-weight:700;margin-top:4px;display:block">80%</span>
+      </div>
+      <div class="skill-card glass" data-aos="flip-right" data-aos-delay="60">
+        <div class="skill-icon" style="background:rgba(6,182,212,.14);color:#06b6d4"><i class="fas fa-wind"></i></div>
+        <h4 style="font-weight:800;color:#fff;margin-bottom:4px">Tailwind CSS</h4>
+        <p class="text-slate-400" style="font-size:.8rem;margin-bottom:8px">تنسيق سريع</p>
+        <div class="progress-bar"><div class="progress-fill" data-width="90"></div></div>
+        <span style="font-size:.75rem;color:#a855f7;font-weight:700;margin-top:4px;display:block">90%</span>
+      </div>
+      <div class="skill-card glass" data-aos="flip-right" data-aos-delay="120">
+        <div class="skill-icon" style="background:rgba(104,160,99,.14);color:#68a063"><i class="fab fa-node-js"></i></div>
+        <h4 style="font-weight:800;color:#fff;margin-bottom:4px">Node.js</h4>
+        <p class="text-slate-400" style="font-size:.8rem;margin-bottom:8px">باك إند</p>
+        <div class="progress-bar"><div class="progress-fill" data-width="75"></div></div>
+        <span style="font-size:.75rem;color:#a855f7;font-weight:700;margin-top:4px;display:block">75%</span>
+      </div>
+      <div class="skill-card glass" data-aos="flip-right" data-aos-delay="180">
+        <div class="skill-icon" style="background:rgba(240,80,50,.14);color:#f05032"><i class="fab fa-git-alt"></i></div>
+        <h4 style="font-weight:800;color:#fff;margin-bottom:4px">Git & GitHub</h4>
+        <p class="text-slate-400" style="font-size:.8rem;margin-bottom:8px">تحكم بالإصدارات</p>
+        <div class="progress-bar"><div class="progress-fill" data-width="82"></div></div>
+        <span style="font-size:.75rem;color:#a855f7;font-weight:700;margin-top:4px;display:block">82%</span>
+      </div>
+    </div>
+    <div class="flex flex-wrap justify-center gap-3" data-aos="fade-up" data-aos-delay="200">
+      <span class="tech-tag" style="color:#06b6d4;border-color:rgba(6,182,212,.2)">TypeScript</span>
+      <span class="tech-tag" style="color:#a855f7;border-color:rgba(168,85,247,.2)">Framer Motion</span>
+      <span class="tech-tag" style="color:#4ade80;border-color:rgba(74,222,128,.2)">MongoDB</span>
+      <span class="tech-tag" style="color:#fb923c;border-color:rgba(251,146,60,.2)">Firebase</span>
+      <span class="tech-tag" style="color:#f472b6;border-color:rgba(244,114,182,.2)">Figma</span>
+      <span class="tech-tag" style="color:#60a5fa;border-color:rgba(96,165,250,.2)">REST APIs</span>
+      <span class="tech-tag" style="color:#facc15;border-color:rgba(250,204,21,.2)">GSAP</span>
+      <span class="tech-tag" style="color:#67e8f9;border-color:rgba(103,232,249,.2)">Three.js</span>
+      <span class="tech-tag" style="color:#c084fc;border-color:rgba(192,132,252,.2)">Aceternity UI</span>
+      <span class="tech-tag" style="color:#86efac;border-color:rgba(134,239,172,.2)">Docker</span>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line my-4" data-aos="fade-in"></div>
+
+<!-- ============================= PROJECTS ============================= -->
+<section id="projects" class="py-28 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16">
+      <span class="badge" data-aos="fade-up">💼 أعمالي</span>
+      <h2 class="section-title gradient-text" data-aos="fade-up" data-aos-delay="100">مشاريعي</h2>
+      <p class="text-slate-400 text-lg max-w-xl mx-auto" data-aos="fade-up" data-aos-delay="200">مجموعة من المشاريع الحقيقية اللي شتغلت عليها</p>
+    </div>
+    <div class="swiper projects-swiper" data-aos="fade-up" data-aos-delay="300">
+      <div class="swiper-wrapper pb-12">
+        <!-- Card 1 -->
+        <div class="swiper-slide">
+          <div class="project-card glass-card" data-tilt data-tilt-max="5" data-tilt-speed="400">
+            <div class="project-thumb" style="background:linear-gradient(135deg,#7c3aed,#06b6d4);border-radius:16px 16px 0 0">🛒</div>
+            <div class="project-overlay">
+              <a href="#" class="btn btn-primary" style="padding:10px 22px;font-size:.9rem"><i class="fas fa-external-link-alt"></i> عرض</a>
+              <a href="#" class="btn btn-outline" style="padding:10px 22px;font-size:.9rem"><i class="fab fa-github"></i> Code</a>
+            </div>
+            <div style="padding:22px">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+                <span style="font-size:.75rem;padding:4px 10px;border-radius:50px;background:rgba(168,85,247,.18);color:#c084fc;border:1px solid rgba(168,85,247,.3)">React</span>
+                <span style="font-size:.75rem;padding:4px 10px;border-radius:50px;background:rgba(6,182,212,.18);color:#67e8f9;border:1px solid rgba(6,182,212,.3)">Node.js</span>
+                <span style="font-size:.75rem;padding:4px 10px;border-radius:50px;background:rgba(74,222,128,.18);color:#86efac;border:1px solid rgba(74,222,128,.3)">MongoDB</span>
+              </div>
+              <h3 style="font-size:1.15rem;font-weight:800;color:#fff;margin-bottom:8px">متجر إلكتروني كامل</h3>
+              <p class="text-slate-400" style="font-size:.85rem;line-height:1.6">منصة تسوق متكاملة مع نظام دفع ولوحة تحكم وإدارة المنتجات.</p>
+            </div>
+          </div>
+        </div>
+        <!-- Card 2 -->
+        <div class="swiper-slide">
+          <div class="project-card glass-card" data-tilt data-tilt-max="5" data-tilt-speed="400">
+            <div class="project-thumb" style="background:linear-gradient(135deg,#06b6d4,#a855f7);border-radius:16px 16px 0 0">💬</div>
+            <div class="project-overlay">
+              <a href="#" class="btn btn-primary" style="padding:10px 22px;font-size:.9rem"><i class="fas fa-external-link-alt"></i> عرض</a>
+              <a href="#" class="btn btn-outline" style="padding:10px 22px;font-size:.9rem"><i class="fab fa-github"></i> Code</a>
+            </div>
+            <div style="padding:22px">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+                <span style="font-size:.75rem;padding:4px 10px;border-radius:50px;background:rgba(168,85,247,.18);color:#c084fc;border:1px solid rgba(168,85,247,.3)">Next.js</span>
+                <span style="font-size:.75rem;padding:4px 10px;border-radius:50px;background:rgba(250,204,21,.18);color:#fde047;border:1px solid rgba(250,204,21,.3)">Socket.io</span>
+                <span style="font-size:.75rem;padding:4px 10px;border-radius:50px;background:rgba(251,146,60,.18);color:#fdba74;border:1px solid rgba(251,146,60,.3)">Firebase</span>
+              </div>
+              <h3 style="font-size:1.15rem;font-weight:800;color:#fff;margin-bottom:8px">تطبيق دردشة فوري</h3>
+              <p class="text-slate-400" style="font-size:.85rem;line-height:1.6">تطبيق محادثة Real-time مع غرف ورسائل جماعية وإشعارات فورية.</p>
+            </div>
+          </div>
+        </div>
+        <!-- Card 3 -->
+        <div class="swiper-slide">
+          <div class="project-card glass-card" data-tilt data-tilt-max="5" data-tilt-speed="400">
+            <div class="project-thumb" style="background:linear-gradient(135deg,#a855f7,#ec4899);border-radius:16px 16px 0 0">📊</div>
+            <div class="project-overlay">
+              <a href="#" class="btn btn-primary" style="padding:10px 22px;font-size:.9rem"><i class="fas fa-external-link-alt"></i> عرض</a>
+              <a href="#" class="btn btn-outline" style="padding:10px 22px;font-size:.9rem"><i class="fab fa-github"></i> Code</a>
+            </div>
+            <div style="padding:22px">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+                <span style="font-size:.75rem;padding:4px 10px;border-radius:50px;background:rgba(168,85,247,.18);color:#c084fc;border:1px solid rgba(168,85,247,.3)">React</span>
+                <span style="font-size:.75rem;padding:4px 10px;border-radius:50px;background:rgba(96,165,250,.18);color:#93c5fd;border:1px solid rgba(96,165,250,.3)">TypeScript</span>
+              </div>
+              <h3 style="font-size:1.15rem;font-weight:800;color:#fff;margin-bottom:8px">لوحة تحكم إدارية</h3>
+              <p class="text-slate-400" style="font-size:.85rem;line-height:1.6">داشبورد احترافي مع رسوم بيانية وإحصائيات وإدارة مستخدمين.</p>
+            </div>
+          </div>
+        </div>
+        <!-- Card 4 -->
+        <div class="swiper-slide">
+          <div class="project-card glass-card" data-tilt data-tilt-max="5" data-tilt-speed="400">
+            <div class="project-thumb" style="background:linear-gradient(135deg,#10b981,#06b6d4);border-radius:16px 16px 0 0">🌐</div>
+            <div class="project-overlay">
+              <a href="#" class="btn btn-primary" style="padding:10px 22px;font-size:.9rem"><i class="fas fa-external-link-alt"></i> عرض</a>
+              <a href="#" class="btn btn-outline" style="padding:10px 22px;font-size:.9rem"><i class="fab fa-github"></i> Code</a>
+            </div>
+            <div style="padding:22px">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+                <span style="font-size:.75rem;padding:4px 10px;border-radius:50px;background:rgba(74,222,128,.18);color:#86efac;border:1px solid rgba(74,222,128,.3)">Next.js</span>
+                <span style="font-size:.75rem;padding:4px 10px;border-radius:50px;background:rgba(168,85,247,.18);color:#c084fc;border:1px solid rgba(168,85,247,.3)">Framer</span>
+              </div>
+              <h3 style="font-size:1.15rem;font-weight:800;color:#fff;margin-bottom:8px">Landing Page إبداعية</h3>
+              <p class="text-slate-400" style="font-size:.85rem;line-height:1.6">صفحة هبوط مع أنيميشن سلس وتصميم عصري يزيد من معدل التحويل.</p>
+            </div>
+          </div>
+        </div>
+        <!-- Card 5 -->
+        <div class="swiper-slide">
+          <div class="project-card glass-card" data-tilt data-tilt-max="5" data-tilt-speed="400">
+            <div class="project-thumb" style="background:linear-gradient(135deg,#f59e0b,#ef4444);border-radius:16px 16px 0 0">📱</div>
+            <div class="project-overlay">
+              <a href="#" class="btn btn-primary" style="padding:10px 22px;font-size:.9rem"><i class="fas fa-external-link-alt"></i> عرض</a>
+              <a href="#" class="btn btn-outline" style="padding:10px 22px;font-size:.9rem"><i class="fab fa-github"></i> Code</a>
+            </div>
+            <div style="padding:22px">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+                <span style="font-size:.75rem;padding:4px 10px;border-radius:50px;background:rgba(251,146,60,.18);color:#fdba74;border:1px solid rgba(251,146,60,.3)">React Native</span>
+                <span style="font-size:.75rem;padding:4px 10px;border-radius:50px;background:rgba(251,146,60,.18);color:#fdba74;border:1px solid rgba(251,146,60,.3)">Firebase</span>
+              </div>
+              <h3 style="font-size:1.15rem;font-weight:800;color:#fff;margin-bottom:8px">تطبيق موبايل</h3>
+              <p class="text-slate-400" style="font-size:.85rem;line-height:1.6">تطبيق موبايل متعدد المنصات بتجربة مستخدم رائعة وأداء عالي.</p>
+            </div>
+          </div>
+        </div>
+        <!-- CTA card -->
+        <div class="swiper-slide">
+          <div class="glass-strong flex flex-col items-center justify-center text-center p-8"
+               style="min-height:380px;border-radius:20px" data-tilt data-tilt-max="5" data-tilt-speed="400">
+            <div style="font-size:3.5rem;margin-bottom:16px;animation:float 3s ease-in-out infinite">🚀</div>
+            <h3 style="font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:10px">مشروعك القادم؟</h3>
+            <p class="text-slate-400 text-sm leading-relaxed mb-6">عندك فكرة مشروع؟ تعالى نحولها لواقع مميز معًا!</p>
+            <a href="https://wa.me/2011183759" target="_blank" class="btn btn-wa" style="padding:12px 28px;font-size:.95rem">
+              <i class="fab fa-whatsapp"></i> ابدأ مشروعك
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="swiper-pagination"></div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line my-4" data-aos="fade-in"></div>
+
+<!-- ============================= REVIEWS ============================= -->
+<section id="reviews" class="py-28 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16">
+      <span class="badge" data-aos="fade-up">⭐ آراء العملاء</span>
+      <h2 class="section-title gradient-text" data-aos="fade-up" data-aos-delay="100">ماذا قالوا عني؟</h2>
+      <p class="text-slate-400 text-lg max-w-xl mx-auto" data-aos="fade-up" data-aos-delay="200">شاركني رأيك وتجربتك معي</p>
+    </div>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" id="default-reviews">
+      <div class="review-card glass-strong p-7" style="border-radius:20px" data-aos="fade-up" data-tilt data-tilt-max="6" data-tilt-speed="400">
+        <div style="display:flex;gap:4px;margin-bottom:16px">
+          <i class="fas fa-star" style="color:#facc15"></i><i class="fas fa-star" style="color:#facc15"></i>
+          <i class="fas fa-star" style="color:#facc15"></i><i class="fas fa-star" style="color:#facc15"></i>
+          <i class="fas fa-star" style="color:#facc15"></i>
+        </div>
+        <p class="text-slate-300 leading-relaxed mb-6" style="font-size:.88rem">"شغل احترافي جداً، سلّم المشروع في الوقت المحدد وفاق توقعاتي."</p>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#06b6d4);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff">أ</div>
+          <div>
+            <div style="color:#fff;font-weight:800;font-size:.9rem">أحمد السيد</div>
+            <div style="color:#a855f7;font-size:.78rem">صاحب متجر إلكتروني</div>
+          </div>
+          <span style="margin-right:auto;font-size:.75rem;padding:4px 10px;border-radius:50px;background:rgba(74,222,128,.12);color:#86efac;border:1px solid rgba(74,222,128,.25)">✓ موثّق</span>
+        </div>
+      </div>
+      <div class="review-card glass-strong p-7" style="border-radius:20px" data-aos="fade-up" data-aos-delay="100" data-tilt data-tilt-max="6" data-tilt-speed="400">
+        <div style="display:flex;gap:4px;margin-bottom:16px">
+          <i class="fas fa-star" style="color:#facc15"></i><i class="fas fa-star" style="color:#facc15"></i>
+          <i class="fas fa-star" style="color:#facc15"></i><i class="fas fa-star" style="color:#facc15"></i>
+          <i class="fas fa-star" style="color:#facc15"></i>
+        </div>
+        <p class="text-slate-300 leading-relaxed mb-6" style="font-size:.88rem">"من أفضل المبرمجين اللي تعاملت معاهم. فاهم المطلوب من أول كلام."</p>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#a855f7);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff">س</div>
+          <div>
+            <div style="color:#fff;font-weight:800;font-size:.9rem">سارة العمري</div>
+            <div style="color:#06b6d4;font-size:.78rem">مديرة تسويق رقمي</div>
+          </div>
+          <span style="margin-right:auto;font-size:.75rem;padding:4px 10px;border-radius:50px;background:rgba(74,222,128,.12);color:#86efac;border:1px solid rgba(74,222,128,.25)">✓ موثّق</span>
+        </div>
+      </div>
+      <div class="review-card glass-strong p-7" style="border-radius:20px" data-aos="fade-up" data-aos-delay="200" data-tilt data-tilt-max="6" data-tilt-speed="400">
+        <div style="display:flex;gap:4px;margin-bottom:16px">
+          <i class="fas fa-star" style="color:#facc15"></i><i class="fas fa-star" style="color:#facc15"></i>
+          <i class="fas fa-star" style="color:#facc15"></i><i class="fas fa-star" style="color:#facc15"></i>
+          <i class="fas fa-star-half-alt" style="color:#facc15"></i>
+        </div>
+        <p class="text-slate-300 leading-relaxed mb-6" style="font-size:.88rem">"عمل لي داشبورد كامل للشركة بتقنيات حديثة. سريع في التنفيذ."</p>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#ec4899);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff">م</div>
+          <div>
+            <div style="color:#fff;font-weight:800;font-size:.9rem">محمد الغامدي</div>
+            <div style="color:#ec4899;font-size:.78rem">مدير تقنية معلومات</div>
+          </div>
+          <span style="margin-right:auto;font-size:.75rem;padding:4px 10px;border-radius:50px;background:rgba(74,222,128,.12);color:#86efac;border:1px solid rgba(74,222,128,.25)">✓ موثّق</span>
+        </div>
+      </div>
+      <!-- CTA -->
+      <div class="glass flex flex-col items-center justify-center text-center p-7"
+           style="border-radius:20px;border:1px dashed rgba(124,58,237,.35);min-height:280px" data-aos="fade-up" data-aos-delay="250">
+        <div style="font-size:2.8rem;margin-bottom:14px">🤝</div>
+        <h3 style="font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:8px">تعامل معي أنت كمان!</h3>
+        <p class="text-slate-400" style="font-size:.85rem;margin-bottom:18px;line-height:1.6">انضم لقائمة العملاء الراضين</p>
+        <a href="https://wa.me/2011183759?text=أهلاً، أنا مهتم بخدماتك!" target="_blank" class="btn btn-wa" style="padding:11px 24px;font-size:.9rem">
+          <i class="fab fa-whatsapp"></i> تواصل معي
+        </a>
+      </div>
+    </div>
+
+    <div id="new-reviews-container" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"></div>
+
+    <div class="glass-strong p-8 mb-10" style="border-radius:24px" data-aos="fade-up">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+        <div>
+          <div class="stat-num">4.9</div>
+          <div style="display:flex;justify-content:center;gap:3px;margin:6px 0">
+            <i class="fas fa-star" style="color:#facc15;font-size:.8rem"></i>
+            <i class="fas fa-star" style="color:#facc15;font-size:.8rem"></i>
+            <i class="fas fa-star" style="color:#facc15;font-size:.8rem"></i>
+            <i class="fas fa-star" style="color:#facc15;font-size:.8rem"></i>
+            <i class="fas fa-star" style="color:#facc15;font-size:.8rem"></i>
+          </div>
+          <div class="text-slate-400" style="font-size:.85rem">متوسط التقييم</div>
+        </div>
+        <div><div class="stat-num">20+</div><div class="text-slate-400" style="font-size:.85rem;margin-top:12px">عميل سعيد</div></div>
+        <div><div class="stat-num">100%</div><div class="text-slate-400" style="font-size:.85rem;margin-top:12px">نسبة الرضا</div></div>
+        <div><div class="stat-num">0</div><div class="text-slate-400" style="font-size:.85rem;margin-top:12px">شكاوى مسجلة</div></div>
+      </div>
+    </div>
+
+    <div class="glass-strong p-8" style="border-radius:24px;max-width:680px;margin-left:auto;margin-right:auto" data-aos="fade-up" data-aos-delay="100">
+      <h3 style="font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:22px;display:flex;align-items:center;gap:10px">
+        <span>✍️</span> أضف تعليقك
+      </h3>
+      <form id="review-form" style="display:flex;flex-direction:column;gap:18px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <label style="color:#94a3b8;font-size:.85rem;font-weight:700;display:block;margin-bottom:8px">الاسم *</label>
+            <input id="rev-name" type="text" placeholder="اسمك" class="input-field" required/>
+          </div>
+          <div>
+            <label style="color:#94a3b8;font-size:.85rem;font-weight:700;display:block;margin-bottom:8px">المسمى الوظيفي</label>
+            <input id="rev-job" type="text" placeholder="مثال: مصمم جرافيك" class="input-field"/>
+          </div>
+        </div>
+        <div>
+          <label style="color:#94a3b8;font-size:.85rem;font-weight:700;display:block;margin-bottom:10px">التقييم *</label>
+          <div id="star-picker" style="display:flex;gap:8px;direction:ltr;justify-content:flex-end">
+            <span class="star-btn" data-val="1" style="font-size:2rem;cursor:pointer;transition:transform .2s;color:#334155">☆</span>
+            <span class="star-btn" data-val="2" style="font-size:2rem;cursor:pointer;transition:transform .2s;color:#334155">☆</span>
+            <span class="star-btn" data-val="3" style="font-size:2rem;cursor:pointer;transition:transform .2s;color:#334155">☆</span>
+            <span class="star-btn" data-val="4" style="font-size:2rem;cursor:pointer;transition:transform .2s;color:#334155">☆</span>
+            <span class="star-btn" data-val="5" style="font-size:2rem;cursor:pointer;transition:transform .2s;color:#334155">☆</span>
+          </div>
+        </div>
+        <div>
+          <label style="color:#94a3b8;font-size:.85rem;font-weight:700;display:block;margin-bottom:8px">تعليقك *</label>
+          <textarea id="rev-text" placeholder="اكتب تجربتك مع الخدمة..." class="input-field" rows="3" required style="resize:none"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="justify-content:center">
+          <i class="fas fa-paper-plane"></i> نشر التعليق
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line my-4" data-aos="fade-in"></div>
+
+<!-- ============================= CONTACT ============================= -->
+<section id="contact" class="py-28 px-6">
+  <div class="max-w-2xl mx-auto text-center">
+    <div class="mb-12">
+      <span class="badge" data-aos="fade-up">📬 تواصل</span>
+      <h2 class="section-title gradient-text" data-aos="fade-up" data-aos-delay="100">تواصل معي</h2>
+      <p class="text-slate-400 text-lg max-w-xl mx-auto" data-aos="fade-up" data-aos-delay="200">
+        مستعد أسمعك في أي وقت — سواء مشروع، استفسار، أو مجرد سلام 👋
+      </p>
+    </div>
+    <div class="glass-strong p-10" style="border-radius:28px" data-aos="zoom-in" data-aos-delay="200" data-tilt data-tilt-max="4" data-tilt-speed="400">
+      <div style="font-size:4rem;margin-bottom:16px">💬</div>
+      <h3 style="font-size:1.4rem;font-weight:800;color:#fff;margin-bottom:8px">واتساب — أسرع طريق</h3>
+      <p class="text-slate-400 mb-8">رد فوري خلال دقائق، أي وقت!</p>
+      <a href="https://wa.me/2011183759?text=أهلاً، أنا مهتم بخدماتك!" target="_blank"
+         class="btn btn-wa" style="padding:16px 44px;font-size:1.1rem;width:100%;justify-content:center">
+        <i class="fab fa-whatsapp" style="font-size:1.3rem"></i>
+        ابعتلي رسالة الآن
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer style="position:relative;z-index:2;padding:32px 24px;text-align:center;border-top:1px solid rgba(255,255,255,.05)">
+  <p style="color:#475569;font-size:.88rem">
+    صنع بـ <span style="color:#ef4444">❤️</span> من
+    <span class="gradient-text" style="font-weight:800">سعد وائل</span>
+    — جميع الحقوق محفوظة © 2025
+  </p>
+  <div style="margin-top:12px">
+    <a href="#hero" style="color:#475569;font-size:.85rem;text-decoration:none;transition:color .3s"
+       onmouseover="this.style.color='#a855f7'" onmouseout="this.style.color='#475569'">↑ الأعلى</a>
+  </div>
+</footer>
+
+<!-- ===== BACK TO TOP ===== -->
+<button id="btt"><i class="fas fa-chevron-up"></i></button>
+
+<!-- ===== WHATSAPP FLOAT ===== -->
+<a id="wa-float" href="https://wa.me/2011183759?text=أهلاً، أنا مهتم بخدماتك!" target="_blank" title="واتساب">
+  <i class="fab fa-whatsapp"></i>
+</a>
+
+<!-- Custom Script -->
+<script src="script.js"></script>
+
+</body>
+</html>
